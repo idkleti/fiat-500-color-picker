@@ -163,7 +163,11 @@ new GLTFLoader().load(
   onModelLoaded,
   (xhr) => {
     if (xhr.lengthComputable && loadingProgress) {
-      loadingProgress.textContent = Math.round((xhr.loaded / xhr.total) * 100) + '%';
+      // Cap at 100: with gzip/brotli on the server, xhr.loaded counts the
+      // decompressed bytes while xhr.total is the compressed size, so the
+      // raw ratio can go above 1.
+      const pct = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
+      loadingProgress.textContent = pct + '%';
     }
   },
   (err) => {
