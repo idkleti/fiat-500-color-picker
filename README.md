@@ -23,7 +23,7 @@ To get realistic reflections on the car's paint, I used a PMREM (Prefiltered Mip
 This project uses the following resources:
 
 **3D Model:**
-* [2014 Abarth 500 1.4 16V](https://sketchfab.com/3d-models/2014-abarth-500-14-16v-a7fe3d6fa0a44c83a62f21853256d166) by [beastf9](https://sketchfab.com/beastf9) (licensed under CC BY 4.0).
+* [2014 Abarth 500 1.4 16V](https://sketchfab.com/3d-models/2014-abarth-500-14-16v-a7fe3d6fa0a44c83a62f21853256d166) by [beastf9](https://sketchfab.com/ddiaz-design) (licensed under CC BY 4.0).
 
 **Background Photos:**
 * [Road with green trees](https://www.pexels.com/it-it/foto/strada-alberi-verde-scenario-17163549/) by Ash Haghighi.
