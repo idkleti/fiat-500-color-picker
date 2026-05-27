@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Fiat Picker - Configuratore</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body class="configurator">
+  <canvas id="scene"></canvas>
+
+  <!-- TOP LEFT: mode toggle + color pickers -->
+  <div class="panel top-left">
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn active" data-mode="single" data-i18n="singleColor">Colore unico</button>
+      <button class="mode-btn" data-mode="two" data-i18n="twoColor">Due colori</button>
+    </div>
+
+    <div class="color-panel" id="colorPanel">
+      <div class="slot-tabs">
+        <button class="slot-tab active" data-slot="body">
+          <span class="slot-swatch" id="bodySwatch"></span>
+          <span class="slot-name" data-i18n="body">Carrozzeria</span>
+        </button>
+        <button class="slot-tab hidden" data-slot="roof" id="roofTab">
+          <span class="slot-swatch" id="roofSwatch"></span>
+          <span class="slot-name" data-i18n="roof">Tetto</span>
+        </button>
+      </div>
+
+      <div class="sv-square" id="svSquare">
+        <div class="sv-cursor" id="svCursor"></div>
+      </div>
+
+      <div class="hue-strip" id="hueStrip">
+        <div class="hue-cursor" id="hueCursor"></div>
+      </div>
+
+      <div class="hex-row">
+        <span class="hex-hash">#</span>
+        <input type="text" class="hex-input" id="hexInput" maxlength="6" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="presets" id="presets">
+      <button class="preset" style="background:#d6243a" data-color="#d6243a" title="Rosso Passione"></button>
+      <button class="preset" style="background:#f5f5f5; border:1px solid #ccc;" data-color="#f5f5f5" title="Bianco Gelato"></button>
+      <button class="preset" style="background:#111" data-color="#111111" title="Nero"></button>
+      <button class="preset" style="background:#1e3a5f" data-color="#1e3a5f" title="Blu Epic"></button>
+      <button class="preset" style="background:#e6c200" data-color="#e6c200" title="Giallo Pastello"></button>
+      <button class="preset" style="background:#7a9a76" data-color="#7a9a76" title="Verde Smeraldo"></button>
+      <button class="preset" style="background:#c97a4a" data-color="#c97a4a" title="Arancio Sicilia"></button>
+      <button class="preset" style="background:#b8b8b8" data-color="#b8b8b8" title="Argento Pop"></button>
+    </div>
+  </div>
+
+  <!-- TOP CENTER: background picker -->
+  <div class="panel top-center">
+    <div class="bg-picker" id="bgPicker">
+      <button class="bg-thumb active" data-bg="studio" title="Studio"></button>
+      <button class="bg-thumb" data-bg="bg1" title="Sfondo 1"></button>
+      <button class="bg-thumb" data-bg="bg2" title="Sfondo 2"></button>
+      <button class="bg-thumb" data-bg="bg3" title="Sfondo 3"></button>
+      <button class="bg-thumb" data-bg="bg4" title="Sfondo 4"></button>
+    </div>
+  </div>
+
+  <!-- TOP RIGHT: back button -->
+  <div class="panel top-right">
+    <button id="backBtn" class="icon-btn" data-i18n-title="back" title="Indietro">←</button>
+  </div>
+
+  <!-- BOTTOM LEFT: screenshot button -->
+  <div class="panel bottom-left">
+    <button id="shotBtn" class="shot-btn" data-i18n="screenshot">Scatta foto</button>
+  </div>
+
+  <!-- BOTTOM RIGHT: language switch -->
+  <div class="lang-switch" id="langSwitch">
+    <button class="flag-btn" data-lang="it" aria-label="Italiano">
+      <svg viewBox="0 0 60 30" class="flag-svg">
+        <rect width="20" height="30" fill="#009246"/>
+        <rect x="20" width="20" height="30" fill="#fff"/>
+        <rect x="40" width="20" height="30" fill="#CE2B37"/>
+      </svg>
+    </button>
+    <button class="flag-btn" data-lang="en" aria-label="English">
+      <svg viewBox="0 0 60 30" class="flag-svg">
+        <clipPath id="ukclip2"><rect width="60" height="30"/></clipPath>
+        <g clip-path="url(#ukclip2)">
+          <rect width="60" height="30" fill="#012169"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/>
+          <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+          <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="5"/>
+        </g>
+      </svg>
+    </button>
+  </div>
+
+  <div id="flash" class="flash"></div>
+
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">
+        <span data-i18n="loading">Caricamento modello</span>
+        <span class="loading-progress" id="loadingProgress">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="configurator.js"></script>
+</body>
+</html>
