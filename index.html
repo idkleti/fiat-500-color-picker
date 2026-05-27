@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Fiat Picker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="landing">
+  <div class="gradient-bg"></div>
+
+  <main class="landing-main">
+    <h1 class="landing-title" data-i18n="title">Fiat Picker</h1>
+    <p class="landing-sub" data-i18n="subtitle">Scegli il colore della tua Fiat 500</p>
+    <button id="startBtn" class="start-btn" data-i18n="start">Inizia</button>
+  </main>
+
+  <div class="lang-switch" id="langSwitch">
+    <button class="flag-btn" data-lang="it" aria-label="Italiano">
+      <svg viewBox="0 0 60 30" class="flag-svg">
+        <rect width="20" height="30" fill="#009246"/>
+        <rect x="20" width="20" height="30" fill="#fff"/>
+        <rect x="40" width="20" height="30" fill="#CE2B37"/>
+      </svg>
+    </button>
+    <button class="flag-btn" data-lang="en" aria-label="English">
+      <svg viewBox="0 0 60 30" class="flag-svg">
+        <clipPath id="ukclip"><rect width="60" height="30"/></clipPath>
+        <g clip-path="url(#ukclip)">
+          <rect width="60" height="30" fill="#012169"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/>
+          <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+          <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="5"/>
+        </g>
+      </svg>
+    </button>
+  </div>
+
+  <script type="module" src="landing.js"></script>
+</body>
+</html>
