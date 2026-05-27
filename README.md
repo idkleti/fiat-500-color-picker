@@ -2,7 +2,7 @@
 
 Fiat Picker is a 3D web configurator that lets you customize the colors of a Fiat 500 Abarth directly in your browser. It’s designed to be a simple, lightweight tool to visualize the car with different paint jobs and in various environments.
 
-### Coming soon:
+## COMING SOON:
 * Changes to mobile layout
 * Background alt translations
 * Ability to change rims/wheels colour
