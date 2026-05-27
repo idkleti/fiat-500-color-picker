@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Fiat Picker - Configuratore</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script type="importmap">
   {
@@ -14,43 +15,43 @@
   }
   </script>
 </head>
-<body class="configurator">
+<body class="configurator overflow-hidden">
   <canvas id="scene"></canvas>
 
-  <!-- TOP LEFT: mode toggle + color pickers -->
-  <div class="panel top-left">
-    <div class="mode-toggle" id="modeToggle">
-      <button class="mode-btn active" data-mode="single" data-i18n="singleColor">Colore unico</button>
-      <button class="mode-btn" data-mode="two" data-i18n="twoColor">Due colori</button>
+  <!-- Top left: mode toggle and color picker -->
+  <div class="panel position-fixed top-0 start-0 m-3 d-flex flex-column gap-2">
+    <div id="modeToggle" class="mode-toggle glass d-flex p-1 rounded-pill shadow-sm">
+      <button class="mode-btn active flex-fill rounded-pill px-3 py-2" data-mode="single" data-i18n="singleColor">Colore unico</button>
+      <button class="mode-btn flex-fill rounded-pill px-3 py-2" data-mode="two" data-i18n="twoColor">Due colori</button>
     </div>
 
-    <div class="color-panel" id="colorPanel">
-      <div class="slot-tabs">
-        <button class="slot-tab active" data-slot="body">
-          <span class="slot-swatch" id="bodySwatch"></span>
+    <div id="colorPanel" class="color-panel glass rounded-3 p-2 shadow-sm d-flex flex-column gap-2">
+      <div class="slot-tabs d-flex gap-1">
+        <button class="slot-tab active flex-fill d-flex align-items-center gap-2 px-2 py-2 rounded" data-slot="body">
+          <span id="bodySwatch" class="slot-swatch flex-shrink-0"></span>
           <span class="slot-name" data-i18n="body">Carrozzeria</span>
         </button>
-        <button class="slot-tab hidden" data-slot="roof" id="roofTab">
-          <span class="slot-swatch" id="roofSwatch"></span>
+        <button id="roofTab" class="slot-tab hidden flex-fill d-flex align-items-center gap-2 px-2 py-2 rounded" data-slot="roof">
+          <span id="roofSwatch" class="slot-swatch flex-shrink-0"></span>
           <span class="slot-name" data-i18n="roof">Tetto</span>
         </button>
       </div>
 
-      <div class="sv-square" id="svSquare">
-        <div class="sv-cursor" id="svCursor"></div>
+      <div id="svSquare" class="sv-square">
+        <div id="svCursor" class="sv-cursor"></div>
       </div>
 
-      <div class="hue-strip" id="hueStrip">
-        <div class="hue-cursor" id="hueCursor"></div>
+      <div id="hueStrip" class="hue-strip">
+        <div id="hueCursor" class="hue-cursor"></div>
       </div>
 
-      <div class="hex-row">
+      <div class="hex-row d-flex align-items-center gap-1 px-2 py-1 rounded">
         <span class="hex-hash">#</span>
-        <input type="text" class="hex-input" id="hexInput" maxlength="6" spellcheck="false" />
+        <input id="hexInput" type="text" class="hex-input flex-grow-1 border-0 bg-transparent p-0 text-uppercase" maxlength="6" spellcheck="false" />
       </div>
     </div>
 
-    <div class="presets" id="presets">
+    <div id="presets" class="presets glass rounded-3 p-2 shadow-sm d-grid gap-1">
       <button class="preset" style="background:#d6243a" data-color="#d6243a" title="Rosso Passione"></button>
       <button class="preset" style="background:#f5f5f5; border:1px solid #ccc;" data-color="#f5f5f5" title="Bianco Gelato"></button>
       <button class="preset" style="background:#111" data-color="#111111" title="Nero"></button>
@@ -62,9 +63,9 @@
     </div>
   </div>
 
-  <!-- TOP CENTER: background picker -->
-  <div class="panel top-center">
-    <div class="bg-picker" id="bgPicker">
+  <!-- Top center: background picker -->
+  <div class="panel position-fixed top-0 start-50 translate-middle-x mt-3">
+    <div id="bgPicker" class="bg-picker glass d-flex gap-1 p-1 rounded-pill shadow-sm">
       <button class="bg-thumb active" data-bg="studio" title="Studio"></button>
       <button class="bg-thumb" data-bg="bg1" title="Sfondo 1"></button>
       <button class="bg-thumb" data-bg="bg2" title="Sfondo 2"></button>
@@ -73,18 +74,18 @@
     </div>
   </div>
 
-  <!-- TOP RIGHT: back button -->
-  <div class="panel top-right">
-    <button id="backBtn" class="icon-btn" data-i18n-title="back" title="Indietro">←</button>
+  <!-- Top right: back button -->
+  <div class="panel position-fixed top-0 end-0 m-3">
+    <button id="backBtn" class="icon-btn btn glass rounded-circle shadow-sm" data-i18n-title="back" title="Indietro">&larr;</button>
   </div>
 
-  <!-- BOTTOM LEFT: screenshot button -->
-  <div class="panel bottom-left">
-    <button id="shotBtn" class="shot-btn" data-i18n="screenshot">Scatta foto</button>
+  <!-- Bottom left: screenshot button -->
+  <div class="panel position-fixed bottom-0 start-0 m-3">
+    <button id="shotBtn" class="shot-btn btn btn-dark btn-lg rounded-pill px-4 fw-normal text-uppercase shadow" data-i18n="screenshot">Scatta foto</button>
   </div>
 
-  <!-- BOTTOM RIGHT: language switch -->
-  <div class="lang-switch" id="langSwitch">
+  <!-- Bottom right: language switch -->
+  <div id="langSwitch" class="lang-switch glass position-fixed bottom-0 end-0 m-3 d-flex gap-2 p-2 rounded-pill shadow">
     <button class="flag-btn" data-lang="it" aria-label="Italiano">
       <svg viewBox="0 0 60 30" class="flag-svg">
         <rect width="20" height="30" fill="#009246"/>
@@ -108,12 +109,16 @@
 
   <div id="flash" class="flash"></div>
 
-  <div id="loadingOverlay" class="loading-overlay">
-    <div class="loading-card">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">
-        <span data-i18n="loading">Caricamento modello</span>
-        <span class="loading-progress" id="loadingProgress">0%</span>
+  <div id="loadingOverlay" class="loading-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+    <div class="loading-card card border-0 shadow">
+      <div class="card-body d-flex flex-column align-items-center gap-3 px-4 py-4">
+        <div class="spinner-border text-dark" role="status">
+          <span class="visually-hidden" data-i18n="loading">Caricamento modello</span>
+        </div>
+        <div class="loading-text d-flex align-items-center gap-2">
+          <span data-i18n="loading">Caricamento modello</span>
+          <span id="loadingProgress" class="loading-progress">0%</span>
+        </div>
       </div>
     </div>
   </div>
