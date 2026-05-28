@@ -10,6 +10,11 @@ const translations = {
     screenshot: 'Scatta foto',
     back: 'Indietro',
     loading: 'Caricamento modello',
+    bgStudio: 'Studio',
+    bg1: 'Sfondo 1',
+    bg2: 'Sfondo 2',
+    bg3: 'Sfondo 3',
+    bg4: 'Sfondo 4',
   },
   en: {
     title: 'Fiat Picker',
@@ -22,6 +27,11 @@ const translations = {
     screenshot: 'Take photo',
     back: 'Back',
     loading: 'Loading model',
+    bgStudio: 'Studio',
+    bg1: 'Background 1',
+    bg2: 'Background 2',
+    bg3: 'Background 3',
+    bg4: 'Background 4',
   },
 };
 

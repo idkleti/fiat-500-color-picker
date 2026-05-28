@@ -291,3 +291,29 @@ body {
   min-width: 3em;
   text-align: right;
 }
+
+/* ============================================================
+   MOBILE  (phones / small tablets)
+   The background picker lives top-center on desktop, which collides
+   with the color tools (top-left) on narrow screens. Move it to the
+   bottom-center, just above the screenshot / language row.
+   ============================================================ */
+@media (max-width: 768px) {
+  .bg-picker-wrap {
+    top: auto !important;
+    bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 5.5rem !important;
+  }
+  .bg-thumb { width: 44px; height: 28px; }
+
+  /* Trim the color tools a touch so they don't crowd the left edge */
+  .color-panel,
+  .presets { width: 190px; }
+}
+
+/* Extra-small phones: shrink the background thumbnails further so all
+   five still fit on one centered row */
+@media (max-width: 400px) {
+  .bg-thumb { width: 38px; height: 24px; }
+}
