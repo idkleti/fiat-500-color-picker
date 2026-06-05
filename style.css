@@ -227,31 +227,7 @@ body {
 }
 .hex-input:focus { box-shadow: none; outline: none; }
 
-/* Preset swatches */
-.presets {
-  width: 220px;
-  grid-template-columns: repeat(4, 1fr);
-}
-.preset {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  transition: transform 150ms;
-}
-.preset:hover { transform: scale(1.08); }
-
-/* Screenshot button */
-.shot-btn {
-  letter-spacing: 0.06em;
-  transition: transform 150ms, box-shadow 150ms;
-}
-.shot-btn:hover { transform: translateY(-2px); }
-.shot-btn:active { transform: translateY(0); }
-
-/* Back button */
+/* Back / screenshot / generic icon button */
 .icon-btn {
   width: 44px;
   height: 44px;
@@ -308,8 +284,7 @@ body {
   .bg-thumb { width: 44px; height: 28px; }
 
   /* Trim the color tools a touch so they don't crowd the left edge */
-  .color-panel,
-  .presets { width: 190px; }
+  .color-panel { width: 190px; }
 }
 
 /* Extra-small phones: shrink the background thumbnails further so all

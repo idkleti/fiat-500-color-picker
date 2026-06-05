@@ -642,17 +642,6 @@ hexInput.addEventListener('input', () => {
 });
 hexInput.addEventListener('blur', () => updatePickerUI());
 
-// Preset swatches
-document.querySelectorAll('.preset').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const hsv = hexToHsv(btn.dataset.color);
-    if (!hsv) return;
-    const slot = slots[activeSlot];
-    [slot.h, slot.s, slot.v] = hsv;
-    refreshAll();
-  });
-});
-
 refreshAll();
 
 
