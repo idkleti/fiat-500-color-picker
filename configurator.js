@@ -778,10 +778,16 @@ function fitBackground() {
 
 document.querySelectorAll('.bg-thumb').forEach((btn) => {
   btn.addEventListener('click', () => {
-    // Empty "+" slot → open the file picker instead of activating.
-    if (btn.dataset.bg === 'custom' && !btn.classList.contains('has-image')) {
-      customBgInput.click();
-      return;
+    if (btn.dataset.bg === 'custom') {
+      const isEmpty  = !btn.classList.contains('has-image');
+      const isActive =  btn.classList.contains('active');
+      // Empty slot OR already-active custom photo → open the picker so
+      // the user can pick (or replace) the image.
+      if (isEmpty || isActive) {
+        customBgInput.click();
+        return;
+      }
+      // Has image but currently not active → just activate it.
     }
     document.querySelectorAll('.bg-thumb').forEach((b) =>
       b.classList.toggle('active', b === btn)
