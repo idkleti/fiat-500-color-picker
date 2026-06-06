@@ -14,7 +14,8 @@ const translations = {
     bg1: 'Sfondo 1',
     bg2: 'Sfondo 2',
     bg3: 'Sfondo 3',
-    bg4: 'Sfondo 4',
+    bgCustom: 'Aggiungi sfondo',
+    bgDrop: 'Trascina qui una foto',
   },
   en: {
     title: 'Fiat Picker',
@@ -31,7 +32,8 @@ const translations = {
     bg1: 'Background 1',
     bg2: 'Background 2',
     bg3: 'Background 3',
-    bg4: 'Background 4',
+    bgCustom: 'Add background',
+    bgDrop: 'Drop a photo here',
   },
 };
 

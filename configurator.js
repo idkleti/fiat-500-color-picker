@@ -708,14 +708,16 @@ document.getElementById('backBtn').addEventListener('click', () => {
 
 
 // Background picker
-// Drop your own images into images/backgrounds/ as bg1.jpg through bg4.jpg.
+// Drop your own images into images/backgrounds/ as bg1.jpg through bg3.jpg.
+// The fourth slot is a "+" — the user uploads a custom photo (mobile = file
+// picker, desktop = file picker OR drag-and-drop anywhere on the page).
 
 const BACKGROUNDS = {
   studio: { color: 0xe8ecf1 },
   bg1: { image: 'images/backgrounds/bg1.jpg' },
   bg2: { image: 'images/backgrounds/bg2.jpg' },
   bg3: { image: 'images/backgrounds/bg3.jpg' },
-  bg4: { image: 'images/backgrounds/bg4.jpg' },
+  custom: { image: null },   // populated when user picks / drops a photo
 };
 const bgTexLoader = new THREE.TextureLoader();
 const bgCache = new Map();
@@ -776,11 +778,76 @@ function fitBackground() {
 
 document.querySelectorAll('.bg-thumb').forEach((btn) => {
   btn.addEventListener('click', () => {
+    // Empty "+" slot → open the file picker instead of activating.
+    if (btn.dataset.bg === 'custom' && !btn.classList.contains('has-image')) {
+      customBgInput.click();
+      return;
+    }
     document.querySelectorAll('.bg-thumb').forEach((b) =>
       b.classList.toggle('active', b === btn)
     );
     setBackground(btn.dataset.bg);
   });
+});
+
+// ---- Custom background: file picker + drag-and-drop ---------------------
+const customBgInput = document.getElementById('customBgInput');
+const customThumb = document.querySelector('.bg-thumb[data-bg="custom"]');
+let customObjectUrl = null;
+
+function loadCustomBackground(file) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return;
+
+  // Free the previous blob URL if any, then create a fresh one
+  if (customObjectUrl) URL.revokeObjectURL(customObjectUrl);
+  customObjectUrl = URL.createObjectURL(file);
+
+  // Update the BACKGROUNDS entry and invalidate any cached texture so the
+  // new image is actually loaded.
+  BACKGROUNDS.custom.image = customObjectUrl;
+  const old = bgCache.get('custom');
+  if (old) { old.dispose(); bgCache.delete('custom'); }
+
+  // Update thumb appearance: hide the "+" and show the photo as the preview
+  customThumb.classList.add('has-image');
+  customThumb.style.backgroundImage = `url("${customObjectUrl}")`;
+
+  // Activate the custom background
+  document.querySelectorAll('.bg-thumb').forEach((b) =>
+    b.classList.toggle('active', b === customThumb)
+  );
+  setBackground('custom');
+}
+
+customBgInput.addEventListener('change', () => {
+  const file = customBgInput.files && customBgInput.files[0];
+  if (file) loadCustomBackground(file);
+  customBgInput.value = '';   // allow re-selecting the same file later
+});
+
+// Whole-page drag-and-drop (desktop). Mobile browsers don't fire these,
+// so this is effectively desktop-only without any UA sniffing.
+let dragDepth = 0;
+window.addEventListener('dragenter', (e) => {
+  if (!e.dataTransfer || !Array.from(e.dataTransfer.types).includes('Files')) return;
+  dragDepth++;
+  document.body.classList.add('dragging-file');
+});
+window.addEventListener('dragover', (e) => {
+  if (!e.dataTransfer || !Array.from(e.dataTransfer.types).includes('Files')) return;
+  e.preventDefault();   // required to allow drop
+  e.dataTransfer.dropEffect = 'copy';
+});
+window.addEventListener('dragleave', () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) document.body.classList.remove('dragging-file');
+});
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  document.body.classList.remove('dragging-file');
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) loadCustomBackground(file);
 });
 
 
