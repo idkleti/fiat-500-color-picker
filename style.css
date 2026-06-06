@@ -127,7 +127,34 @@ body {
 .bg-thumb[data-bg="bg1"] { background-image: url('images/backgrounds/bg1.jpg'); }
 .bg-thumb[data-bg="bg2"] { background-image: url('images/backgrounds/bg2.jpg'); }
 .bg-thumb[data-bg="bg3"] { background-image: url('images/backgrounds/bg3.jpg'); }
-.bg-thumb[data-bg="bg4"] { background-image: url('images/backgrounds/bg4.jpg'); }
+
+/* "+" thumbnail: opens file picker on click, accepts drop on desktop */
+.bg-thumb-custom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  background: rgba(0, 0, 0, 0.04);
+}
+.bg-thumb-custom svg { display: block; }
+.bg-thumb-custom.has-image svg { display: none; }
+
+/* Drag-over visual feedback (whole page acts as a drop zone) */
+body.dragging-file::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  border: 3px dashed rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 150;
+}
+body.dragging-file .bg-thumb-custom {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 2px;
+  opacity: 1;
+}
 
 /* Mode toggle */
 .mode-btn {
