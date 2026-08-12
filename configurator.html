@@ -112,7 +112,9 @@
   <!-- Framing editor for an imported photo: the frame always has the same
        aspect ratio as the browser window, so what you frame here is exactly
        what ends up behind the car. -->
-  <div id="cropOverlay" class="crop-overlay position-fixed top-0 start-0 w-100 h-100">
+  <!-- hidden, not just CSS-hidden: if this page ever loads with a stale
+       stylesheet the panel stays out of the way instead of covering the UI. -->
+  <div id="cropOverlay" class="crop-overlay position-fixed top-0 start-0 w-100 h-100" hidden>
     <div class="crop-dialog glass rounded-4 shadow p-3 d-flex flex-column gap-3">
       <div class="crop-header d-flex align-items-start justify-content-between gap-3">
         <div class="d-flex flex-column">

@@ -2,9 +2,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { initLangSwitch, t } from './i18n.js';
+// Namespace import on purpose: a named import of something a stale cached
+// i18n.js doesn't export yet fails module linking and blanks the whole page.
+import * as i18n from './i18n.js';
 
-initLangSwitch();
+i18n.initLangSwitch();
 
 
 // Scene, renderer, camera
@@ -861,12 +863,17 @@ const cropChangeBtn = document.getElementById('cropChangeBtn');
 const cropCancelBtn = document.getElementById('cropCancelBtn');
 const cropApplyBtn  = document.getElementById('cropApplyBtn');
 
+// A browser can serve this script from cache next to a page it doesn't match
+// (GitHub Pages hands everything a 10 minute max-age, and a plain reload only
+// revalidates the document). Missing panel = no framing editor, never a crash.
+const cropReady = !!(cropOverlay && cropStage && cropImage && cropFrame &&
+                     cropZoom && cropChangeBtn && cropCancelBtn && cropApplyBtn);
+
 // Framing in use, in normalized image coordinates: cx/cy is the center of the
 // visible window, zoom 1 shows as much as the window aspect allows and higher
 // values crop in further.
 const customCrop = { cx: 0.5, cy: 0.5, zoom: 1 };
 const MAX_ZOOM = 4;
-cropZoom.max = MAX_ZOOM;
 
 let editCrop = { ...customCrop };   // working copy while the editor is open
 let pendingObjectUrl = null;        // photo being framed, not applied yet
@@ -886,9 +893,13 @@ function cropRect(imgAspect, viewAspect, crop) {
   return { x: cx - w / 2, y: cy - h / 2, w, h };
 }
 
+function isCropOpen() {
+  return cropReady && cropOverlay.classList.contains('open');
+}
+
 function drawCropFrame() {
   // Closed editor means no layout to measure, so nothing to draw either.
-  if (!cropImage.naturalWidth || !cropOverlay.classList.contains('open')) return;
+  if (!isCropOpen() || !cropImage.naturalWidth) return;
   // The stage is the frame's reference box: hold it to the size the photo is
   // actually rendered at, whatever the browser makes of fit-content.
   cropStage.style.width = cropImage.clientWidth + 'px';
@@ -909,6 +920,15 @@ function drawCropFrame() {
 
 // file = null reframes the photo already in use.
 function openCropEditor(file) {
+  if (!cropReady) {
+    // No panel to frame it with: fall back to using the photo as it comes.
+    if (file) {
+      pendingObjectUrl = URL.createObjectURL(file);
+      editCrop = { cx: 0.5, cy: 0.5, zoom: 1 };
+      applyCrop();
+    }
+    return;
+  }
   if (file) {
     if (pendingObjectUrl) URL.revokeObjectURL(pendingObjectUrl);
     pendingObjectUrl = URL.createObjectURL(file);
@@ -920,18 +940,25 @@ function openCropEditor(file) {
     cropImage.src = customObjectUrl;
   }
   cropZoom.value = editCrop.zoom;
+  // The hidden attribute is the fallback guard, the class carries the layout.
+  cropOverlay.hidden = false;
   cropOverlay.classList.add('open');
   // naturalWidth stays 0 until the image decodes; the load handler covers that.
   if (cropImage.complete) drawCropFrame();
 }
-cropImage.addEventListener('load', drawCropFrame);
+
+function closeCropEditor() {
+  if (!cropReady) return;
+  cropOverlay.classList.remove('open');
+  cropOverlay.hidden = true;
+}
 
 function cancelCrop() {
   if (pendingObjectUrl) {
     URL.revokeObjectURL(pendingObjectUrl);
     pendingObjectUrl = null;
   }
-  cropOverlay.classList.remove('open');
+  closeCropEditor();
 }
 
 function applyCrop() {
@@ -952,7 +979,7 @@ function applyCrop() {
     // From now on the thumb reopens this editor, so say so on hover. Setting
     // the key (not just the title) keeps it translated on a language switch.
     customThumb.dataset.i18nTitle = 'bgCustomFrame';
-    customThumb.title = t('bgCustomFrame');
+    if (i18n.t) customThumb.title = i18n.t('bgCustomFrame');
   }
 
   document.querySelectorAll('.bg-thumb').forEach((b) =>
@@ -960,7 +987,7 @@ function applyCrop() {
   );
   // setBackground reframes the cached texture, or does it once the new one loads.
   setBackground('custom');
-  cropOverlay.classList.remove('open');
+  closeCropEditor();
 }
 
 function setCropZoom(z) {
@@ -983,7 +1010,7 @@ function startCropDrag(x, y) {
   cropDragStart = { x, y, cx: editCrop.cx, cy: editCrop.cy };
 }
 
-cropStage.addEventListener('pointerdown', (e) => {
+function onCropPointerDown(e) {
   cropStage.setPointerCapture(e.pointerId);
   cropPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (cropPointers.size === 1) {
@@ -995,9 +1022,9 @@ cropStage.addEventListener('pointerdown', (e) => {
     cropPinchStart = dist > 0 ? { dist, zoom: editCrop.zoom } : null;
     cropDragStart = null;   // panning resumes when a finger lifts
   }
-});
+}
 
-cropStage.addEventListener('pointermove', (e) => {
+function onCropPointerMove(e) {
   if (!cropPointers.has(e.pointerId)) return;
   cropPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -1011,7 +1038,7 @@ cropStage.addEventListener('pointermove', (e) => {
   editCrop.cx = cropDragStart.cx + (e.clientX - cropDragStart.x) / rect.width;
   editCrop.cy = cropDragStart.cy + (e.clientY - cropDragStart.y) / rect.height;
   drawCropFrame();
-});
+}
 
 function endCropPointer(e) {
   cropPointers.delete(e.pointerId);
@@ -1026,25 +1053,31 @@ function endCropPointer(e) {
     startCropDrag(p.x, p.y);
   }
 }
-cropStage.addEventListener('pointerup', endCropPointer);
-cropStage.addEventListener('pointercancel', endCropPointer);
-
-cropStage.addEventListener('wheel', (e) => {
+function onCropWheel(e) {
   e.preventDefault();
   setCropZoom(editCrop.zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
-}, { passive: false });
+}
 
-cropZoom.addEventListener('input', () => setCropZoom(parseFloat(cropZoom.value)));
-
-cropChangeBtn.addEventListener('click', () => customBgInput.click());
-cropCancelBtn.addEventListener('click', cancelCrop);
-cropApplyBtn.addEventListener('click', applyCrop);
-cropOverlay.addEventListener('pointerdown', (e) => {
-  if (e.target === cropOverlay) cancelCrop();
-});
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && cropOverlay.classList.contains('open')) cancelCrop();
-});
+// Wiring lives here on its own so a missing panel simply skips it.
+if (cropReady) {
+  cropZoom.max = MAX_ZOOM;
+  cropImage.addEventListener('load', drawCropFrame);
+  cropStage.addEventListener('pointerdown', onCropPointerDown);
+  cropStage.addEventListener('pointermove', onCropPointerMove);
+  cropStage.addEventListener('pointerup', endCropPointer);
+  cropStage.addEventListener('pointercancel', endCropPointer);
+  cropStage.addEventListener('wheel', onCropWheel, { passive: false });
+  cropZoom.addEventListener('input', () => setCropZoom(parseFloat(cropZoom.value)));
+  cropChangeBtn.addEventListener('click', () => customBgInput.click());
+  cropCancelBtn.addEventListener('click', cancelCrop);
+  cropApplyBtn.addEventListener('click', applyCrop);
+  cropOverlay.addEventListener('pointerdown', (e) => {
+    if (e.target === cropOverlay) cancelCrop();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isCropOpen()) cancelCrop();
+  });
+}
 
 
 // Resize
@@ -1055,7 +1088,7 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   fitBackground();
   // The frame follows the window aspect, so it has to be redrawn too.
-  if (cropOverlay.classList.contains('open')) drawCropFrame();
+  drawCropFrame();
 });
 
 
