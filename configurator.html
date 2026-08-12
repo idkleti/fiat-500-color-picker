@@ -109,6 +109,38 @@
 
   <div id="flash" class="flash"></div>
 
+  <!-- Framing editor for an imported photo: the frame always has the same
+       aspect ratio as the browser window, so what you frame here is exactly
+       what ends up behind the car. -->
+  <div id="cropOverlay" class="crop-overlay position-fixed top-0 start-0 w-100 h-100">
+    <div class="crop-dialog glass rounded-4 shadow p-3 d-flex flex-column gap-3">
+      <div class="crop-header d-flex align-items-start justify-content-between gap-3">
+        <div class="d-flex flex-column">
+          <span class="crop-title" data-i18n="cropTitle">Scegli l&rsquo;inquadratura</span>
+          <span class="crop-hint" data-i18n="cropHint">Trascina il riquadro, pizzica o usa lo zoom</span>
+        </div>
+        <button id="cropChangeBtn" class="crop-change btn btn-sm rounded-pill px-3" data-i18n="cropChange">Cambia foto</button>
+      </div>
+
+      <div id="cropStage" class="crop-stage">
+        <img id="cropImage" class="crop-img" alt="" />
+        <div id="cropFrame" class="crop-frame"></div>
+      </div>
+
+      <div class="crop-zoom-row d-flex align-items-center gap-2 px-1">
+        <span class="crop-zoom-icon">&minus;</span>
+        <input id="cropZoom" type="range" class="form-range crop-zoom" min="1" max="4" step="0.01" value="1"
+               data-i18n-title="cropZoom" title="Zoom" aria-label="Zoom" />
+        <span class="crop-zoom-icon">+</span>
+      </div>
+
+      <div class="crop-actions d-flex justify-content-end gap-2">
+        <button id="cropCancelBtn" class="btn btn-light rounded-pill px-3" data-i18n="cropCancel">Annulla</button>
+        <button id="cropApplyBtn" class="btn btn-dark rounded-pill px-3" data-i18n="cropApply">Applica</button>
+      </div>
+    </div>
+  </div>
+
   <div id="loadingOverlay" class="loading-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
     <div class="loading-card card border-0 shadow">
       <div class="card-body d-flex flex-column align-items-center gap-3 px-4 py-4">

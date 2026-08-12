@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { initLangSwitch } from './i18n.js';
+import { initLangSwitch, t } from './i18n.js';
 
 initLangSwitch();
 
@@ -764,6 +764,16 @@ function fitBackground() {
   if (!tex || !tex.isTexture || !tex.image) return;
   const imgAspect = tex.image.width / tex.image.height;
   const canvasAspect = canvas.clientWidth / canvas.clientHeight;
+
+  // The imported photo uses the window the user framed instead of the default
+  // cover-fit. UV space has its origin bottom-left, hence the flipped y.
+  if (currentBgId === 'custom') {
+    const r = cropRect(imgAspect, canvasAspect, customCrop);
+    tex.repeat.set(r.w, r.h);
+    tex.offset.set(r.x, 1 - r.y - r.h);
+    return;
+  }
+
   if (canvasAspect > imgAspect) {
     // Crop top and bottom, shifting the sampling window by the bias.
     const repeatY = imgAspect / canvasAspect;
@@ -781,12 +791,10 @@ document.querySelectorAll('.bg-thumb').forEach((btn) => {
     if (btn.dataset.bg === 'custom') {
       const isEmpty  = !btn.classList.contains('has-image');
       const isActive =  btn.classList.contains('active');
-      // Empty slot OR already-active custom photo → open the picker so
-      // the user can pick (or replace) the image.
-      if (isEmpty || isActive) {
-        customBgInput.click();
-        return;
-      }
+      // Empty slot → open the picker. Already-active photo → reopen the
+      // framing editor, which also offers to swap the image.
+      if (isEmpty)  { customBgInput.click(); return; }
+      if (isActive) { openCropEditor(null);  return; }
       // Has image but currently not active → just activate it.
     }
     document.querySelectorAll('.bg-thumb').forEach((b) =>
@@ -801,28 +809,11 @@ const customBgInput = document.getElementById('customBgInput');
 const customThumb = document.querySelector('.bg-thumb[data-bg="custom"]');
 let customObjectUrl = null;
 
+// The photo isn't applied straight away: the user first frames it, and
+// applyCrop() below installs it as the background.
 function loadCustomBackground(file) {
   if (!file || !file.type || !file.type.startsWith('image/')) return;
-
-  // Free the previous blob URL if any, then create a fresh one
-  if (customObjectUrl) URL.revokeObjectURL(customObjectUrl);
-  customObjectUrl = URL.createObjectURL(file);
-
-  // Update the BACKGROUNDS entry and invalidate any cached texture so the
-  // new image is actually loaded.
-  BACKGROUNDS.custom.image = customObjectUrl;
-  const old = bgCache.get('custom');
-  if (old) { old.dispose(); bgCache.delete('custom'); }
-
-  // Update thumb appearance: hide the "+" and show the photo as the preview
-  customThumb.classList.add('has-image');
-  customThumb.style.backgroundImage = `url("${customObjectUrl}")`;
-
-  // Activate the custom background
-  document.querySelectorAll('.bg-thumb').forEach((b) =>
-    b.classList.toggle('active', b === customThumb)
-  );
-  setBackground('custom');
+  openCropEditor(file);
 }
 
 customBgInput.addEventListener('change', () => {
@@ -857,6 +848,205 @@ window.addEventListener('drop', (e) => {
 });
 
 
+// Framing editor: pick which part of the imported photo stays visible.
+// The frame always carries the aspect ratio of the browser window, so whatever
+// it covers is exactly what shows up behind the car.
+
+const cropOverlay   = document.getElementById('cropOverlay');
+const cropStage     = document.getElementById('cropStage');
+const cropImage     = document.getElementById('cropImage');
+const cropFrame     = document.getElementById('cropFrame');
+const cropZoom      = document.getElementById('cropZoom');
+const cropChangeBtn = document.getElementById('cropChangeBtn');
+const cropCancelBtn = document.getElementById('cropCancelBtn');
+const cropApplyBtn  = document.getElementById('cropApplyBtn');
+
+// Framing in use, in normalized image coordinates: cx/cy is the center of the
+// visible window, zoom 1 shows as much as the window aspect allows and higher
+// values crop in further.
+const customCrop = { cx: 0.5, cy: 0.5, zoom: 1 };
+const MAX_ZOOM = 4;
+cropZoom.max = MAX_ZOOM;
+
+let editCrop = { ...customCrop };   // working copy while the editor is open
+let pendingObjectUrl = null;        // photo being framed, not applied yet
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Largest window with the wanted aspect that fits the image, shrunk by zoom and
+// kept inside the image bounds. y grows downwards, like the image itself.
+function cropRect(imgAspect, viewAspect, crop) {
+  let w = 1, h = 1;
+  if (viewAspect > imgAspect) h = imgAspect / viewAspect;
+  else                        w = viewAspect / imgAspect;
+  w /= crop.zoom;
+  h /= crop.zoom;
+  const cx = clamp(crop.cx, w / 2, 1 - w / 2);
+  const cy = clamp(crop.cy, h / 2, 1 - h / 2);
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
+}
+
+function drawCropFrame() {
+  // Closed editor means no layout to measure, so nothing to draw either.
+  if (!cropImage.naturalWidth || !cropOverlay.classList.contains('open')) return;
+  // The stage is the frame's reference box: hold it to the size the photo is
+  // actually rendered at, whatever the browser makes of fit-content.
+  cropStage.style.width = cropImage.clientWidth + 'px';
+  const r = cropRect(
+    cropImage.naturalWidth / cropImage.naturalHeight,
+    canvas.clientWidth / canvas.clientHeight,
+    editCrop
+  );
+  // Store the clamped center back, otherwise dragging past an edge would wind
+  // up an offset the frame never shows.
+  editCrop.cx = r.x + r.w / 2;
+  editCrop.cy = r.y + r.h / 2;
+  cropFrame.style.left   = (r.x * 100) + '%';
+  cropFrame.style.top    = (r.y * 100) + '%';
+  cropFrame.style.width  = (r.w * 100) + '%';
+  cropFrame.style.height = (r.h * 100) + '%';
+}
+
+// file = null reframes the photo already in use.
+function openCropEditor(file) {
+  if (file) {
+    if (pendingObjectUrl) URL.revokeObjectURL(pendingObjectUrl);
+    pendingObjectUrl = URL.createObjectURL(file);
+    editCrop = { cx: 0.5, cy: 0.5, zoom: 1 };
+    cropImage.src = pendingObjectUrl;
+  } else {
+    if (!customObjectUrl) return;
+    editCrop = { ...customCrop };
+    cropImage.src = customObjectUrl;
+  }
+  cropZoom.value = editCrop.zoom;
+  cropOverlay.classList.add('open');
+  // naturalWidth stays 0 until the image decodes; the load handler covers that.
+  if (cropImage.complete) drawCropFrame();
+}
+cropImage.addEventListener('load', drawCropFrame);
+
+function cancelCrop() {
+  if (pendingObjectUrl) {
+    URL.revokeObjectURL(pendingObjectUrl);
+    pendingObjectUrl = null;
+  }
+  cropOverlay.classList.remove('open');
+}
+
+function applyCrop() {
+  Object.assign(customCrop, editCrop);
+
+  if (pendingObjectUrl) {
+    // A new photo was picked: swap it in and drop the stale cached texture.
+    if (customObjectUrl) URL.revokeObjectURL(customObjectUrl);
+    customObjectUrl = pendingObjectUrl;
+    pendingObjectUrl = null;
+    BACKGROUNDS.custom.image = customObjectUrl;
+    const old = bgCache.get('custom');
+    if (old) { old.dispose(); bgCache.delete('custom'); }
+
+    // Update thumb appearance: hide the "+" and show the photo as the preview.
+    customThumb.classList.add('has-image');
+    customThumb.style.backgroundImage = `url("${customObjectUrl}")`;
+    // From now on the thumb reopens this editor, so say so on hover. Setting
+    // the key (not just the title) keeps it translated on a language switch.
+    customThumb.dataset.i18nTitle = 'bgCustomFrame';
+    customThumb.title = t('bgCustomFrame');
+  }
+
+  document.querySelectorAll('.bg-thumb').forEach((b) =>
+    b.classList.toggle('active', b === customThumb)
+  );
+  // setBackground reframes the cached texture, or does it once the new one loads.
+  setBackground('custom');
+  cropOverlay.classList.remove('open');
+}
+
+function setCropZoom(z) {
+  editCrop.zoom = clamp(z, 1, MAX_ZOOM);
+  cropZoom.value = editCrop.zoom;
+  drawCropFrame();
+}
+
+// Drag the frame with one pointer, pinch with two, wheel or slider to zoom.
+const cropPointers = new Map();
+let cropDragStart = null;
+let cropPinchStart = null;
+
+function cropPinchDistance() {
+  const [a, b] = [...cropPointers.values()];
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function startCropDrag(x, y) {
+  cropDragStart = { x, y, cx: editCrop.cx, cy: editCrop.cy };
+}
+
+cropStage.addEventListener('pointerdown', (e) => {
+  cropStage.setPointerCapture(e.pointerId);
+  cropPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (cropPointers.size === 1) {
+    startCropDrag(e.clientX, e.clientY);
+    cropStage.classList.add('grabbing');
+  } else if (cropPointers.size === 2) {
+    const dist = cropPinchDistance();
+    // Two fingers on the same spot would make the zoom ratio blow up.
+    cropPinchStart = dist > 0 ? { dist, zoom: editCrop.zoom } : null;
+    cropDragStart = null;   // panning resumes when a finger lifts
+  }
+});
+
+cropStage.addEventListener('pointermove', (e) => {
+  if (!cropPointers.has(e.pointerId)) return;
+  cropPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (cropPinchStart && cropPointers.size >= 2) {
+    const dist = cropPinchDistance();
+    if (dist > 0) setCropZoom(cropPinchStart.zoom * (dist / cropPinchStart.dist));
+    return;
+  }
+  if (!cropDragStart) return;
+  const rect = cropStage.getBoundingClientRect();
+  editCrop.cx = cropDragStart.cx + (e.clientX - cropDragStart.x) / rect.width;
+  editCrop.cy = cropDragStart.cy + (e.clientY - cropDragStart.y) / rect.height;
+  drawCropFrame();
+});
+
+function endCropPointer(e) {
+  cropPointers.delete(e.pointerId);
+  try { cropStage.releasePointerCapture(e.pointerId); } catch {}
+  if (cropPointers.size < 2) cropPinchStart = null;
+  if (cropPointers.size === 0) {
+    cropDragStart = null;
+    cropStage.classList.remove('grabbing');
+  } else {
+    // A finger lifted mid-pinch: restart the pan from the one still down.
+    const [p] = [...cropPointers.values()];
+    startCropDrag(p.x, p.y);
+  }
+}
+cropStage.addEventListener('pointerup', endCropPointer);
+cropStage.addEventListener('pointercancel', endCropPointer);
+
+cropStage.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  setCropZoom(editCrop.zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
+}, { passive: false });
+
+cropZoom.addEventListener('input', () => setCropZoom(parseFloat(cropZoom.value)));
+
+cropChangeBtn.addEventListener('click', () => customBgInput.click());
+cropCancelBtn.addEventListener('click', cancelCrop);
+cropApplyBtn.addEventListener('click', applyCrop);
+cropOverlay.addEventListener('pointerdown', (e) => {
+  if (e.target === cropOverlay) cancelCrop();
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && cropOverlay.classList.contains('open')) cancelCrop();
+});
+
+
 // Resize
 
 window.addEventListener('resize', () => {
@@ -864,6 +1054,8 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   fitBackground();
+  // The frame follows the window aspect, so it has to be redrawn too.
+  if (cropOverlay.classList.contains('open')) drawCropFrame();
 });
 
 

@@ -280,6 +280,95 @@ body.dragging-file .bg-thumb-custom {
 }
 .flash.active { opacity: 0.85; transition: opacity 60ms ease-in; }
 
+/* Framing editor for the imported photo */
+.crop-overlay {
+  z-index: 180;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 1rem;
+  background: rgba(18, 20, 24, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.crop-overlay.open { display: flex; }
+
+.crop-dialog { margin: auto; max-width: min(94vw, 720px); }
+.crop-title { font-size: 0.95rem; font-weight: 600; letter-spacing: 0.02em; }
+.crop-hint { font-size: 0.76rem; color: #666; }
+
+.crop-change {
+  border: 0;
+  background: rgba(0, 0, 0, 0.06);
+  color: #333;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+.crop-change:hover { background: rgba(0, 0, 0, 0.12); color: #111; }
+
+/* Hugs the photo so the frame can be positioned in % of the image itself */
+.crop-stage {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+  line-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #22262c;
+  cursor: grab;
+  touch-action: none;
+}
+.crop-stage.grabbing { cursor: grabbing; }
+
+.crop-img {
+  display: block;
+  /* Sized off the viewport, never off the stage: the stage is what follows the
+     photo, so the frame percentages stay glued to the pixels on screen. */
+  max-width: min(100vw - 5rem, 640px);
+  max-height: 50vh;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The visible window: the huge shadow spread dims everything around it,
+   clipped by the stage. */
+.crop-frame {
+  position: absolute;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+/* Rule-of-thirds guides: a box inset to the middle third, two borders each */
+.crop-frame::before,
+.crop-frame::after {
+  content: '';
+  position: absolute;
+  inset: 33.33%;
+}
+.crop-frame::before {
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
+}
+.crop-frame::after {
+  left: 0;
+  right: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.crop-zoom { flex: 1; margin: 0; }
+.crop-zoom-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+  color: #666;
+  user-select: none;
+}
+
 /* Loading overlay */
 .loading-overlay {
   z-index: 200;

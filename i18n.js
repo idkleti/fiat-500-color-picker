@@ -15,7 +15,14 @@ const translations = {
     bg2: 'Sfondo 2',
     bg3: 'Sfondo 3',
     bgCustom: 'Aggiungi sfondo',
+    bgCustomFrame: 'Regola inquadratura',
     bgDrop: 'Trascina qui una foto',
+    cropTitle: 'Scegli l’inquadratura',
+    cropHint: 'Trascina il riquadro, pizzica o usa lo zoom',
+    cropChange: 'Cambia foto',
+    cropZoom: 'Zoom',
+    cropCancel: 'Annulla',
+    cropApply: 'Applica',
   },
   en: {
     title: 'Fiat Picker',
@@ -33,7 +40,14 @@ const translations = {
     bg2: 'Background 2',
     bg3: 'Background 3',
     bgCustom: 'Add background',
+    bgCustomFrame: 'Adjust framing',
     bgDrop: 'Drop a photo here',
+    cropTitle: 'Choose the framing',
+    cropHint: 'Drag the frame, pinch or use the zoom',
+    cropChange: 'Change photo',
+    cropZoom: 'Zoom',
+    cropCancel: 'Cancel',
+    cropApply: 'Apply',
   },
 };
 
@@ -52,7 +66,7 @@ function setLang(lang) {
   updateFlagState();
 }
 
-function t(key) {
+export function t(key) {
   return translations[getLang()][key] || key;
 }
 

@@ -6,6 +6,7 @@ Fiat Picker is a 3D web configurator that lets you customize the colors of a Fia
 The app provides an interactive 3D model that you can rotate and zoom. Key features include:
 * **Color Customization:** You can choose a single color for the whole car or switch to "Two colors" mode to paint the roof and body separately.
 * **Environment Swapping:** Change the background to see how the car's reflections and lighting change in different settings (city, mountains, seaside, etc.).
+* **Your Own Backdrop:** Import a photo of your own and frame it: a movable, zoomable window with the same aspect ratio as the browser window decides which part of the photo stays visible behind the car.
 * **Snap a Photo:** There is a dedicated button to take a high-quality screenshot of your configuration and save it to your device.
 * **Language Support:** The interface is available in both English and Italian.
 
